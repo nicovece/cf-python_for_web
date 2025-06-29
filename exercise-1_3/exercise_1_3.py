@@ -7,7 +7,7 @@ while True:
     except ValueError:
         print("Please enter a valid integer for the number of recipes.")
 
-def take_recipe():
+def take_recipe(i):
     print(f"\nRecipe {i+1}:")
     name = input("Enter recipe name: ")
     while True:
@@ -39,7 +39,7 @@ def take_recipe():
     recipes_list.append(recipe)
 
 for i in range(n):
-    take_recipe()
+    take_recipe(i)
 
 print(f"\n\nRecipes list:\n------------------------------")
 for recipe in recipes_list:
@@ -47,7 +47,9 @@ for recipe in recipes_list:
     print(f"Recipe: {recipe['name']}")
     print(f"Cooking time: {recipe['cooking_time']} minutes")
     print(f"Difficulty: {recipe['difficulty']}")
-    print(f"Ingredients: {recipe['ingredients']}")
+    print(f"Ingredients:")
+    for ingredient in recipe['ingredients']:
+        print(f"- {ingredient}")
 
 print(f"\n\nIngredients available across all recipes\n------------------------------\n")
 for ingredient in ingredients_list:
