@@ -17,40 +17,42 @@ def take_recipe(i):
         except ValueError:
             print("Please enter a valid integer for the cooking time.")
     ingredients = [ingredient.strip() for ingredient in input("Enter ingredients (comma separated): ").split(",")]
-    difficulty = ""
-    print("\n--------------------------------")
-    if cooking_time < 10 and len(ingredients) < 4:
-        difficulty = "Easy"
-    elif cooking_time < 10 and len(ingredients) >= 4:
-        difficulty = "Medium"
-    elif cooking_time >= 10 and len(ingredients) < 4:
-        difficulty = "Intermediate"
-    elif cooking_time >= 10 and len(ingredients) >= 4:
-        difficulty = "Hard"
     recipe = {
         "name": name,
         "cooking_time": cooking_time,
-        "ingredients": ingredients,
-        "difficulty": difficulty
+        "ingredients": ingredients
     }
-    for ingredient in ingredients:
+    return recipe
+
+for i in range(n):
+    recipe = take_recipe(i)
+    for ingredient in recipe['ingredients']:
         if ingredient not in ingredients_list:
             ingredients_list.append(ingredient)
     recipes_list.append(recipe)
 
-for i in range(n):
-    take_recipe(i)
-
 print(f"\n\nRecipes list:\n------------------------------")
 for recipe in recipes_list:
+    # Calculate difficulty as per the rules
+    cooking_time = recipe['cooking_time']
+    num_ingredients = len(recipe['ingredients'])
+    if cooking_time < 10 and num_ingredients < 4:
+        difficulty = "Easy"
+    elif cooking_time < 10 and num_ingredients >= 4:
+        difficulty = "Medium"
+    elif cooking_time >= 10 and num_ingredients < 4:
+        difficulty = "Intermediate"
+    elif cooking_time >= 10 and num_ingredients >= 4:
+        difficulty = "Hard"
     print("\n")
     print(f"Recipe: {recipe['name']}")
-    print(f"Cooking time: {recipe['cooking_time']} minutes")
-    print(f"Difficulty: {recipe['difficulty']}")
+    print(f"Cooking time: {cooking_time} minutes")
+    print(f"Difficulty: {difficulty}")
     print(f"Ingredients:")
     for ingredient in recipe['ingredients']:
         print(f"- {ingredient}")
 
 print(f"\n\nIngredients available across all recipes\n------------------------------\n")
+ingredients_list.sort()
 for ingredient in ingredients_list:
     print(f"- {ingredient}")
