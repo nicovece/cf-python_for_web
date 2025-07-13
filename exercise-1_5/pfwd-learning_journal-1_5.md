@@ -1,74 +1,65 @@
 # Python for Web Developers Learning Journal
 
-## Exercise 1.4: File Handling in Python
+## Exercise 1.5: Object-Oriented Programming in Python
 
 ### Reflection Questions
 
 ---
 
-**Why is file storage important when you're using Python? What would happen if you didn't store local files?**
+**In your own words, what is object-oriented programming? What are the benefits of OOP?**
 
-File storage is important in Python, and in programming in general, because it allows data to persist after the program has finished running. Without storing data in files, all information would be lost when the program ends, making it impossible to save user input, results, or any progress between sessions.
+Object-oriented programming is a way of writing code where we think of things as **objects** — like real-world things. For example, if you’re making a game, you might have objects like a **Player**, **Enemy**, or **Score**. Each object has:
 
-Additionally, storing data in files makes it possible to share information between different programs or users, or to transfer data from one system to another. This is essential for collaboration, backups, and integrating with other tools or platforms.
+- **Attributes** (also called properties) – things it _has_, like a player's name or health.
+- **Methods** – things it _can do_, like move or attack.
 
----
+We use **classes** to create these objects. A class is like a blueprint, and the object is built from that blueprint.
 
-**In this Exercise you learned about the pickling process with the pickle.dump() method. What are pickles? In which situations would you choose to use pickles and why?**
+The benefits of OOP are:
 
-The Python pickle process is used to save ("serialize" with `pickle.dump(obj, file)`) and load ("deserialize" with `pickle.load(file)`) Python objects by converting them into a format that can be stored on disk. This process is called serialization (or pickling). It turns objects like lists, dictionaries, or custom classes into a byte stream. This byte stream contains all the details needed to rebuild the object later in another Python program. The reverse process, called deserialization (or unpickling), restores the object to its original form.
-
-Situations suitable for Pickles use:
-
-- **Saving program state**: For example, saving a trained machine learning model, or the progress of a game, or a Python session's data.
-- **Caching**: Store expensive computations or data fetched from APIs locally so you don't have to re-fetch or re-calculate.
-- **Passing complex data between Python programs**: If you need to send data between processes or across a network (with some caveats—see below).
-- **Quick data persistence for internal tools**: When you're building tools/scripts for personal use or prototyping, and you need a quick way to store Python objects.
+- **Organized code** – It’s easier to group related code together in one place (in a class).
+- **Reusability** – You can reuse classes in other programs without rewriting them.
+- **Easier to update** – If something changes, you only need to update the class, not every place the object is used.
+- **Encapsulation** – You can hide the details of how something works and only show what’s necessary. This keeps things simple and safe.
+- **Inheritance** – You can create a new class based on an existing one, saving time and reducing code duplication.
 
 ---
 
-**In Python, what function do you use to find out which directory you're currently in? What if you wanted to change your current working directory?**
+**What are objects and classes in Python? Come up with a real-world example to illustrate how objects and classes work.**
 
-Using the os module command `os.getcwd()`, you can find out which directory you are currently working in. To change the current working directory, you can use `os.chdir(path)`, where `path` is the new directory you want to move to.
-(Os module must be imported first with `import osg.)
+A class is like a blueprint or a recipe. It defines what something is and what it can do. An object is a specific thing made from that class, an instance. It follows the blueprint but has its own unique data.
 
-Example
+An example is the samrtphone.
 
-```python
-import os                 # Imports os module
-print(os.getcwd())        # Shows the current working directory
-os.chdir('/new/path')     # Changes to the specified directory
-```
+**Class** : Smartphone
+This is the **blueprint** for any phone. It defines what every smartphone _has_ (like brand, model, storage) and what it _can do_ (make calls, take photos, send messages).
 
----
-
-**Imagine you're working on a Python script and are worried there may be an error in a block of code. How would you approach the situation to prevent the entire script from terminating due to an error?**
-
-I would use a `try-except` block. By placing the potentially problematic code inside a `try` block, Python will attempt to run it. If there are no errors, the code inside the `try` block runs normally and the program continues as usual. If an error occurs, instead of stopping the entire script, Python will jump to the `except` block, where I can handle the error gracefully—such as by showing a helpful message to the user or taking corrective action. This way, the rest of the script can continue running.
-
-For example:
-
-```python
-try:
-    # Code that might cause an error
-    result = 10 / 0
-except ZeroDivisionError:
-    print("You can't divide by zero! Please check your input.")
-```
-
-It is also possible to catch all exceptions:
-
-```python
-try:
-    # risky code
-except Exception as e:
-    print(f"An error occurred: {e}")
-```
-
-This approach helps prevent the entire script from terminating due to an error in one part of the code, while allowing normal execution if no errors occur.
+**Object / Instance**: My iPhone
+Each actual phone is a unique object created from the `Smartphone` class. It might have a different brand, color, or amount of storage — but it still works like a phone.
 
 ---
 
-**You’re now more than halfway through Achievement 1! Take a moment to reflect on your learning in the course so far. How is it going? What’s something you’re proud of so far? Is there something you’re struggling with? What do you need more practice with? Feel free to use these notes to guide your next mentor call.**
+**In your own words, write brief explanations of the following OOP concepts; 100 to 200 words per method is fine.**
 
-I think my learning is going pretty well. I’m encountering new, Python-specific concepts, and these are the ones I need to put more effort into understanding. They’re not particularly complex, but they are completely new to me, so I can’t rely on previous knowledge. While learning, I don’t feel pride as much as a quiet sense of fulfillment — as if my mind is slowly filling with light. It’s not tied to any one topic, but to the journey as a whole.
+**Inheritance**
+Inheritance allows one class (called a child class or subclass) to take on the features of another class (called the parent class or superclass). It helps us reuse code, organize it better, and avoid repetition.
+
+For example, imagine a Vehicle class with basic features like speed and color. A Car or Bike can inherit from Vehicle, meaning they automatically get all its features. However, they can also have their own unique features, such as the number of doors for a car or the type of handle for a bike.
+
+Inheritance makes programs more flexible and easier to maintain. If we update something in the parent class, the changes automatically apply to all child classes. This saves time and reduces errors when modifying or expanding our code.
+
+**Polymorphism**
+Polymorphism allows different classes to define their own version of a method with the same name, and the correct version is chosen automatically depending on the object. This makes our code more flexible and easier to extend.
+
+A good example is a payment system. Imagine we're building a shopping app that supports different payment types: Credit Card, PayPal, and Cryptocurrency. Each payment type has a process_payment() method, but it behaves differently depending on the method used.
+
+We could have a PaymentMethod parent class, with subclasses for each type, such as CreditCard or PayPal. All subclasses use the same method name: process_payment(), but each class defines it differently based on how that payment method works. Other parts of the app can simply call the method without needing to know which type of payment is being used — they’ll just get the correct result.
+
+Even though the method name is the same, the behavior changes depending on the object. This is polymorphism in action. It helps us write cleaner, more adaptable code that works with many object types through shared method names.
+
+**Operator Overloading**
+Operator overloading lets us customize how Python’s built-in operators (like +, -, ==, and others) behave for our own classes. This means we can define what it means to “add” two objects, compare them for equality, or use other operators in a way that makes sense for our objects.
+
+For example, imagine a class that represents a Book. We can decide what happens when two books are added together — perhaps combining their total number of pages or appending the content of the second book to the first.
+
+By defining these behaviors, operator overloading makes custom objects feel more natural and easier to use, almost like built-in types in the language. It helps write cleaner and more readable code when working with complex data.
