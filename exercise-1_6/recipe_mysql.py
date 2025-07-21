@@ -56,6 +56,66 @@ def create_recipe(conn, cursor):
     ingredients = [ingredient.strip() for ingredient in input("Enter ingredients (comma separated): ").split(",")]
     difficulty = calc_difficulty(cooking_time, ingredients)
     
+    # Show recipe summary and ask for confirmation
+    print("\n" + "="*50)
+    print("RECIPE SUMMARY")
+    print("="*50)
+    print(f"Name: {name}")
+    print(f"Cooking Time: {cooking_time} minutes")
+    print(f"Ingredients: {', '.join(ingredients)}")
+    print(f"Difficulty: {difficulty}")
+    print("="*50)
+    
+    while True:
+        confirm = input("\nIs this correct? (y/n/edit): ").strip().lower()
+        
+        if confirm in ['y', 'yes', '']:
+            # User confirmed - proceed to save
+            break
+        elif confirm in ['n', 'no']:
+            print("Recipe creation cancelled.")
+            return
+        elif confirm in ['e', 'edit']:
+            # Allow editing
+            print("\nWhat would you like to edit?")
+            print("1. Name")
+            print("2. Cooking time")
+            print("3. Ingredients")
+            print("4. Cancel editing")
+            
+            edit_choice = input("Enter your choice (1-4): ").strip()
+            
+            if edit_choice == "1":
+                name = input("Enter new recipe name: ")
+            elif edit_choice == "2":
+                while True:
+                    try:
+                        cooking_time = int(input("Enter new cooking time (in minutes): "))
+                        break
+                    except ValueError:
+                        print("Please enter a valid integer for the cooking time.")
+                difficulty = calc_difficulty(cooking_time, ingredients)
+            elif edit_choice == "3":
+                ingredients = [ingredient.strip() for ingredient in input("Enter new ingredients (comma separated): ").split(",")]
+                difficulty = calc_difficulty(cooking_time, ingredients)
+            elif edit_choice == "4":
+                continue
+            else:
+                print("Invalid choice. Please try again.")
+                continue
+            
+            # Show updated summary
+            print("\n" + "="*50)
+            print("UPDATED RECIPE SUMMARY")
+            print("="*50)
+            print(f"Name: {name}")
+            print(f"Cooking Time: {cooking_time} minutes")
+            print(f"Ingredients: {', '.join(ingredients)}")
+            print(f"Difficulty: {difficulty}")
+            print("="*50)
+        else:
+            print("Please enter 'y' to confirm, 'n' to cancel, or 'edit' to modify.")
+    
     # Convert ingredients list to string for MySQL storage
     ingredients_str = ", ".join(ingredients)
     
@@ -72,8 +132,7 @@ def create_recipe(conn, cursor):
     """)
     
     # Insert the recipe into the database
-    sql = """INSERT INTO recipes (name, cooking_time, ingredients, difficulty) 
-             VALUES (%s, %s, %s, %s)"""
+    sql = """INSERT INTO recipes (name, cooking_time, ingredients, difficulty) VALUES (%s, %s, %s, %s)"""
     values = (name, cooking_time, ingredients_str, difficulty)
     
     try:
