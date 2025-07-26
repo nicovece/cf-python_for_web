@@ -7,3 +7,6 @@ exercise-1_3/test.py
 .env
 .env.local
 .env.*.local
+
+CLAUDE.md
+
