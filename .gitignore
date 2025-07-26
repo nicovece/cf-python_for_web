@@ -10,3 +10,6 @@ exercise-1_3/test.py
 
 CLAUDE.md
 
+
+# Python cache files
+__pycache__/
