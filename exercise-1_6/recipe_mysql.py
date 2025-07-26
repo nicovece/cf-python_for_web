@@ -26,7 +26,9 @@ def create_database():
         passwd=os.getenv('DB_PASSWORD'))
     
     cursor = conn.cursor()
-    cursor.execute("CREATE DATABASE IF NOT EXISTS task_database")
+    # Build query as string and execute
+    create_db_query = "CREATE DATABASE IF NOT EXISTS task_database"
+    cursor.execute(create_db_query)
     
     cursor.close()
     conn.close()
@@ -120,7 +122,7 @@ def create_recipe(conn, cursor):
     ingredients_str = ", ".join(ingredients)
     
     # Create the recipes table if it doesn't exist
-    cursor.execute("""
+    create_table_query = """
         CREATE TABLE IF NOT EXISTS recipes (
             id INT AUTO_INCREMENT PRIMARY KEY,
             name VARCHAR(255) NOT NULL,
@@ -129,7 +131,8 @@ def create_recipe(conn, cursor):
             difficulty VARCHAR(50) NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-    """)
+    """
+    cursor.execute(create_table_query)
     
     # Insert the recipe into the database
     sql = """INSERT INTO recipes (name, cooking_time, ingredients, difficulty) VALUES (%s, %s, %s, %s)"""
@@ -147,7 +150,8 @@ def search_recipe(conn, cursor):
     print("\n=== Recipe Search ===")
     
     # Step 1: SELECT only the ingredients column from the table
-    cursor.execute("SELECT ingredients FROM recipes")
+    select_query = "SELECT ingredients FROM recipes"
+    cursor.execute(select_query)
     results = cursor.fetchall()
     
     # Step 2: Create a list to store all ingredients without duplicates
@@ -172,24 +176,31 @@ def search_recipe(conn, cursor):
         print(f"{i}. {ingredient.title()}")
     
     # Step 4: Allow user to pick an ingredient by number
+    print(f"\nEnter the number of the ingredient to search for (1-{len(all_ingredients)}):")
+    print("Or enter '0' to return to main menu")
+    
     while True:
         try:
-            choice = int(input(f"\nEnter the number of the ingredient to search for (1-{len(all_ingredients)}): "))
-            if 1 <= choice <= len(all_ingredients):
+            choice = int(input("Enter your choice: "))
+            if choice == 0:
+                print("Returning to main menu...")
+                return
+            elif 1 <= choice <= len(all_ingredients):
                 search_ingredient = all_ingredients[choice - 1]
                 print(f"Searching for: '{search_ingredient}'")  # Debug line
                 break
             else:
-                print(f"Please enter a number between 1 and {len(all_ingredients)}.")
+                print(f"Please enter a number between 0 and {len(all_ingredients)}.")
         except ValueError:
             print("Please enter a valid number.")
     
     # Step 5: Search for recipes containing the selected ingredient
-    cursor.execute("""
+    search_query = """
         SELECT name, cooking_time, ingredients, difficulty 
         FROM recipes 
         WHERE LOWER(ingredients) LIKE %s
-    """, (f'%{search_ingredient}%',))
+    """
+    cursor.execute(search_query, (f'%{search_ingredient}%',))
     
     matching_recipes = cursor.fetchall()
     
@@ -210,7 +221,7 @@ def search_recipe(conn, cursor):
     # Ask user if they want to search again or return to main menu
     while True:
         print("\n" + "-" * 30)
-        print("What would you like to do?")
+        print("\nWhat would you like to do?")
         print("1. Search for another ingredient")
         print("2. Return to main menu")
         
@@ -229,10 +240,229 @@ def search_recipe(conn, cursor):
 
 
 def update_recipe(conn, cursor):
-    print("Updating recipe...")
+    print("\n=== Recipe Update ===")
+    
+    # Check if there are any recipes to update
+    select_query = "SELECT id, name FROM recipes"
+    cursor.execute(select_query)
+    recipes = cursor.fetchall()
+    
+    if not recipes:
+        print("No recipes found in the database.")
+        print("Please create some recipes first.")
+        return
+    
+    print("\nAvailable recipes:")
+    for recipe in recipes:
+        print(f"ID {recipe[0]}: {recipe[1]}")
+
+    # Get recipe selection from user
+    while True:
+        try:
+            choice = int(input(f"\nEnter the ID of the recipe to update: "))
+            # Check if the entered ID exists in our recipes list
+            recipe_ids = [recipe[0] for recipe in recipes]
+            if choice in recipe_ids:
+                recipe_id = choice
+                recipe_name = next(recipe[1] for recipe in recipes if recipe[0] == choice)
+                print(f"Updating recipe: {recipe_name}")
+                break
+            else:
+                print(f"Please enter a valid recipe ID: {', '.join(map(str, recipe_ids))}")
+        except ValueError:
+            print("Please enter a valid number.")
+
+    # Get current recipe data
+    select_query = "SELECT name, cooking_time, ingredients, difficulty FROM recipes WHERE id = %s"
+    cursor.execute(select_query, (recipe_id,))
+    current_recipe = cursor.fetchone()
+    
+    if not current_recipe:
+        print("Recipe not found!")
+        return
+    
+    current_name, current_cooking_time, current_ingredients, current_difficulty = current_recipe
+    
+    # Show current recipe details
+    print(f"\nCurrent recipe details:")
+    print(f"Name: {current_name}")
+    print(f"Cooking Time: {current_cooking_time} minutes")
+    print(f"Ingredients: {current_ingredients}")
+    print(f"Difficulty: {current_difficulty}")
+    
+    # Update options menu
+    while True:
+        print("\n" + "-" * 30)
+        print("What would you like to update?")
+        print("1. Name")
+        print("2. Cooking time")
+        print("3. Ingredients")
+        print("4. Cancel")
+
+        update_choice = input("Enter your choice (1-4): ").strip()
+
+        if update_choice == "1":
+            new_name = input("Enter new recipe name: ").strip()
+            if new_name:
+                # Show confirmation
+                print(f"\nUpdate: '{current_name}' → '{new_name}'")
+                confirm = input("Confirm this change? (y/n): ").strip().lower()
+                if confirm in ['y', 'yes']:
+                    try:
+                        # Build query as string and execute
+                        update_query = "UPDATE recipes SET name = %s WHERE id = %s"
+                        cursor.execute(update_query, (new_name, recipe_id))
+                        conn.commit()
+                        print(f"Recipe name updated successfully!")
+                    except mysql.connector.Error as err:
+                        print(f"Error updating recipe: {err}")
+                        conn.rollback()
+                else:
+                    print("Update cancelled.")
+            else:
+                print("Name cannot be empty.")
+                
+        elif update_choice == "2":
+            while True:
+                try:
+                    new_cooking_time = int(input("Enter new cooking time (in minutes): "))
+                    if new_cooking_time > 0:
+                        # Recalculate difficulty
+                        ingredients_list = current_ingredients.split(", ")
+                        new_difficulty = calc_difficulty(new_cooking_time, ingredients_list)
+                        
+                        # Show confirmation
+                        print(f"\nUpdate: {current_cooking_time} minutes → {new_cooking_time} minutes")
+                        print(f"Difficulty: {current_difficulty} → {new_difficulty}")
+                        confirm = input("Confirm this change? (y/n): ").strip().lower()
+                        
+                        if confirm in ['y', 'yes']:
+                            try:
+                                # Build query as string and execute (separate queries as per exercise)
+                                update_query = "UPDATE recipes SET cooking_time = %s WHERE id = %s"
+                                cursor.execute(update_query, (new_cooking_time, recipe_id))
+                                
+                                # Separate query for difficulty update
+                                difficulty_query = "UPDATE recipes SET difficulty = %s WHERE id = %s"
+                                cursor.execute(difficulty_query, (new_difficulty, recipe_id))
+                                
+                                conn.commit()
+                                print(f"Recipe cooking time and difficulty updated successfully!")
+                            except mysql.connector.Error as err:
+                                print(f"Error updating recipe: {err}")
+                                conn.rollback()
+                        else:
+                            print("Update cancelled.")
+                        break
+                    else:
+                        print("Cooking time must be greater than 0.")
+                except ValueError:
+                    print("Please enter a valid integer for cooking time.")
+                    
+        elif update_choice == "3":
+            new_ingredients_input = input("Enter new ingredients (comma separated): ").strip()
+            if new_ingredients_input:
+                new_ingredients = [ingredient.strip() for ingredient in new_ingredients_input.split(",")]
+                new_ingredients_str = ", ".join(new_ingredients)
+                
+                # Recalculate difficulty
+                new_difficulty = calc_difficulty(current_cooking_time, new_ingredients)
+                
+                # Show confirmation
+                print(f"\nUpdate: '{current_ingredients}' → '{new_ingredients_str}'")
+                print(f"Difficulty: {current_difficulty} → {new_difficulty}")
+                confirm = input("Confirm this change? (y/n): ").strip().lower()
+                
+                if confirm in ['y', 'yes']:
+                    try:
+                        # Build query as string and execute (separate queries as per exercise)
+                        update_query = "UPDATE recipes SET ingredients = %s WHERE id = %s"
+                        cursor.execute(update_query, (new_ingredients_str, recipe_id))
+                        
+                        # Separate query for difficulty update
+                        difficulty_query = "UPDATE recipes SET difficulty = %s WHERE id = %s"
+                        cursor.execute(difficulty_query, (new_difficulty, recipe_id))
+                        
+                        conn.commit()
+                        print(f"Recipe ingredients and difficulty updated successfully!")
+                    except mysql.connector.Error as err:
+                        print(f"Error updating recipe: {err}")
+                        conn.rollback()
+                else:
+                    print("Update cancelled.")
+            else:
+                print("Ingredients cannot be empty.")
+                
+        elif update_choice == "4":
+            print("Returning to main menu...")
+            break
+        else:
+            print("Invalid choice. Please try again.")
 
 def delete_recipe(conn, cursor):
-    print("Deleting recipe...")
+    print("\n=== Recipe Delete ===")
+    
+    # Check if there are any recipes to delete
+    select_query = "SELECT id, name FROM recipes"
+    cursor.execute(select_query)
+    recipes = cursor.fetchall()
+    
+    if not recipes:
+        print("No recipes found in the database.")
+        print("Please create some recipes first.")
+        return
+    
+    print("\nAvailable recipes:")
+    for recipe in recipes:
+        print(f"ID {recipe[0]}: {recipe[1]}")
+
+    # Get recipe selection from user
+    while True:
+        try:
+            choice = int(input(f"\nEnter the ID of the recipe to delete: "))
+            # Check if the entered ID exists in our recipes list
+            recipe_ids = [recipe[0] for recipe in recipes]
+            if choice in recipe_ids:
+                recipe_id = choice
+                recipe_name = next(recipe[1] for recipe in recipes if recipe[0] == choice)
+                break
+            else:
+                print(f"Please enter a valid recipe ID: {', '.join(map(str, recipe_ids))}")
+        except ValueError:
+            print("Please enter a valid number.")
+
+    # Get current recipe data to show before deletion
+    select_query = "SELECT name, cooking_time, ingredients, difficulty FROM recipes WHERE id = %s"
+    cursor.execute(select_query, (recipe_id,))
+    current_recipe = cursor.fetchone()
+    
+    if not current_recipe:
+        print("Recipe not found!")
+        return
+    
+    current_name, current_cooking_time, current_ingredients, current_difficulty = current_recipe
+    
+    # Show recipe details and ask for confirmation
+    print(f"\nRecipe to delete:")
+    print(f"Name: {current_name}")
+    print(f"Cooking Time: {current_cooking_time} minutes")
+    print(f"Ingredients: {current_ingredients}")
+    print(f"Difficulty: {current_difficulty}")
+    
+    confirm = input(f"\nAre you sure you want to delete '{current_name}'? (y/n): ").strip().lower()
+    
+    if confirm in ['y', 'yes']:
+        try:
+            # Build query as string and execute
+            delete_query = "DELETE FROM recipes WHERE id = %s"
+            cursor.execute(delete_query, (recipe_id,))
+            conn.commit()
+            print(f"Recipe '{current_name}' deleted successfully!")
+        except mysql.connector.Error as err:
+            print(f"Error deleting recipe: {err}")
+            conn.rollback()
+    else:
+        print("Deletion cancelled.")
 
 def main_menu(conn, cursor):
     while True:
