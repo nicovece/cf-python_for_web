@@ -105,9 +105,9 @@ def create_recipe():
             print("1. Name")
             print("2. Cooking time")
             print("3. Ingredients")
-            print("4. Cancel editing")
+            print("0. Cancel editing")
             
-            edit_choice = input("Enter your choice (1-4): ").strip()
+            edit_choice = input("Enter your choice (0-3): ").strip()
             
             if edit_choice == "1":
                 name = input("Enter new recipe name: ")
@@ -132,7 +132,7 @@ def create_recipe():
                 temp_recipe.ingredients = ", ".join(ingredients)
                 temp_recipe.calc_difficulty()
                 difficulty = temp_recipe.difficulty
-            elif edit_choice == "4":
+            elif edit_choice == "0":
                 continue
             else:
                 print("Invalid choice. Please try again.")
@@ -305,16 +305,16 @@ def edit_recipe():
         print("1. Name: " + recipe_to_edit.name)
         print("2. Ingredients: " + recipe_to_edit.ingredients)
         print("3. Cooking Time: " + str(recipe_to_edit.cooking_time) + " minutes")
-        print("4. Done editing (return to main menu)")
+        print("0. Done editing (return to main menu)")
         
         # Ask the user which attribute they'd like to edit by entering the corresponding number
         while True:
             try:
-                attribute_choice = int(input("\nEnter the number of the attribute to edit (1-4): "))
-                if 1 <= attribute_choice <= 4:
+                attribute_choice = int(input("\nEnter the number of the attribute to edit (0-3): "))
+                if 0 <= attribute_choice <= 3:
                     break
                 else:
-                    print("Please enter a number between 1 and 4.")
+                    print("Please enter a number between 0 and 3.")
             except ValueError:
                 print("Please enter a valid number.")
         
@@ -346,9 +346,9 @@ def edit_recipe():
             print("1. Replace all ingredients")
             print("2. Add new ingredients")
             print("3. Remove specific ingredients")
-            print("4. Cancel")
+            print("0. Cancel")
             
-            ingredient_choice = input("Enter your choice (1-4): ").strip()
+            ingredient_choice = input("Enter your choice (0-3): ").strip()
             
             if ingredient_choice == "1":
                 # Replace all ingredients (follows exercise directions)
@@ -448,7 +448,7 @@ def edit_recipe():
                             print("Please enter valid numbers separated by commas.")
                             continue
                             
-            elif ingredient_choice == "4":
+            elif ingredient_choice == "0":
                 print("Returning to attribute selection...")
             else:
                 print("Invalid choice. Please try again.")
@@ -475,7 +475,7 @@ def edit_recipe():
             except ValueError:
                 print("Please enter a valid integer for cooking time.")
                 
-        elif attribute_choice == 4:
+        elif attribute_choice == 0:
             # Done editing - return to main menu
             print("Returning to main menu...")
             break
@@ -535,10 +535,10 @@ def main_menu():
         print("\n=== Recipe Management System ===")
         print("1. Create recipe")
         print("2. View all recipes")
-        print("3. Search recipe")
-        print("4. Edit recipe")
-        print("5. Delete recipe")
-        print("6. Exit (or type 'quit')")
+        print("3. Search for recipes by ingredients")
+        print("4. Edit a recipe")
+        print("5. Delete a recipe")
+        print("0. Exit (or type 'quit')")
         
         choice = input("Enter your choice: ").strip().lower()
         
@@ -552,9 +552,10 @@ def main_menu():
             edit_recipe()
         elif choice in ["5", "delete", "remove"]:
             delete_recipe()
-        elif choice in ["6", "quit", "exit", "q"]:
+        elif choice in ["0", "quit", "exit", "q"]:
             print("Goodbye!")
             session.close()
+            engine.close()
             break
         else:
             print("Invalid choice. Please try again.")
