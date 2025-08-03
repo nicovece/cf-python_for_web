@@ -559,7 +559,7 @@ def main_menu():
         elif choice in ["0", "quit", "exit", "q"]:
             print("Goodbye!")
             session.close()
-            engine.close()
+            engine.dispose()
             break
         else:
             print("Invalid choice. Please try again.")
