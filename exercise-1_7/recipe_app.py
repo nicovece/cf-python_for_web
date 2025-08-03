@@ -63,7 +63,7 @@ class Recipe(Base):
 Base.metadata.create_all(engine)
 
 def create_recipe():
-    print("\nCreating a new recipe:")
+    print("\n=== Create Recipe ===")
     name = input("Enter recipe name: ")
     while True:
         try:
@@ -81,9 +81,7 @@ def create_recipe():
     difficulty = temp_recipe.difficulty
     
     # Show recipe summary and ask for confirmation
-    print("\n" + "="*50)
-    print("RECIPE SUMMARY")
-    print("="*50)
+    print("\nRECIPE SUMMARY")
     # Create temporary recipe to display using __str__
     temp_recipe = Recipe()
     temp_recipe.name = name
@@ -91,7 +89,6 @@ def create_recipe():
     temp_recipe.ingredients = ", ".join(ingredients)
     temp_recipe.difficulty = difficulty
     print(temp_recipe.__str__())
-    print("="*50)
     
     while True:
         confirm = input("\nIs this correct? (y/n/edit): ").strip().lower()
@@ -142,9 +139,7 @@ def create_recipe():
                 continue
             
             # Show updated summary
-            print("\n" + "="*50)
-            print("UPDATED RECIPE SUMMARY")
-            print("="*50)
+            print("\nUPDATED RECIPE SUMMARY")
             # Create temporary recipe to display using __str__
             temp_recipe = Recipe()
             temp_recipe.name = name
@@ -152,7 +147,6 @@ def create_recipe():
             temp_recipe.ingredients = ", ".join(ingredients)
             temp_recipe.difficulty = difficulty
             print(temp_recipe.__str__())
-            print("="*50)
         else:
             print("Please enter 'y' to confirm, 'n' to cancel, or 'edit' to modify.")
     
@@ -173,16 +167,13 @@ def view_all_recipes():
     print("\n=== View All Recipes ===")
     recipes = session.query(Recipe).all()
     if not recipes:
-        print("No recipes found in the database.")
+        print("\nNo recipes found in the database.")
         return
     
-    print(f"Found {len(recipes)} recipe(s) in the database:")
-    print("=" * 50)
-    
+    print(f"\nFound {len(recipes)} recipe(s) in the database:")
     for i, recipe in enumerate(recipes, 1):
         print(f"\n--- Recipe {i} of {len(recipes)} ---")
         print(recipe.__str__())
-        print("-" * 30)
     
     print(f"\nTotal: {len(recipes)} recipe(s) displayed.")
     input("\nPress Enter to return to main menu...")
@@ -222,7 +213,7 @@ def search_recipe():
     
     while True:
         try:
-            user_input = input("Enter your choice: ").strip()
+            user_input = input("\nEnter your choice: ").strip()
             if user_input == "0":
                 print("Returning to main menu...")
                 return
@@ -238,7 +229,7 @@ def search_recipe():
             
             # Create search_ingredients list based on user selection
             search_ingredients = [all_ingredients[num - 1] for num in choice_numbers]
-            print(f"Searching for recipes containing: {', '.join(search_ingredients)}")
+            print(f"\nSearching for recipes containing: {', '.join(search_ingredients)}")
             break
             
         except ValueError:
@@ -257,14 +248,13 @@ def search_recipe():
     
     # Display the results using __str__ method
     print(f"\nRecipes containing {', '.join(search_ingredients)}:")
-    print("=" * 50)
+    print("-" * 30)
     
     if matching_recipes:
-        print(f"Found {len(matching_recipes)} matching recipe(s):")
+        print(f"Found {len(matching_recipes)} matching recipe(s)")
         for i, recipe in enumerate(matching_recipes, 1):
             print(f"\n--- Recipe {i} of {len(matching_recipes)} ---")
             print(recipe.__str__())
-            print("-" * 30)
         print(f"\nTotal: {len(matching_recipes)} recipe(s) found.")
     else:
         print(f"No recipes found containing {', '.join(search_ingredients)}.")
@@ -273,7 +263,6 @@ def search_recipe():
 
 def edit_recipe():
     print("\n=== Edit Recipe ===")
-    
     # Check if any recipes exist on your database, and continue only if there are any
     recipe_count = session.query(Recipe).count()
     if recipe_count == 0:
@@ -491,7 +480,6 @@ def edit_recipe():
 
 def delete_recipe():
     print("\n=== Recipe Delete ===")
-    
     # Get all recipes from database
     recipes = session.query(Recipe).all()
     
@@ -536,7 +524,7 @@ def delete_recipe():
 
 def main_menu():
     while True:
-        print("\n=== Recipe Management System ===")
+        print("\n=== Recipe Management System ===\n")
         print("1. Create recipe")
         print("2. View all recipes")
         print("3. Search for recipes by ingredients")
@@ -544,7 +532,7 @@ def main_menu():
         print("5. Delete a recipe")
         print("0. Exit (or type 'quit')")
         
-        choice = input("Enter your choice: ").strip().lower()
+        choice = input("\nEnter your choice: ").strip().lower()
         
         if choice in ["1", "create", "add"]:
             create_recipe()
