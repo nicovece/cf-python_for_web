@@ -36,7 +36,7 @@ class Recipe(Base):
             f"Recipe ID: {self.id}\n"
             f"Recipe Name: {self.name}\n"
             f"Ingredients: {self.ingredients}\n"
-            f"Cooking Time: {self.cooking_time}\n"
+            f"Cooking Time: {self.cooking_time} minutes\n"
             f"Difficulty: {self.difficulty}"
         )
     
@@ -84,10 +84,13 @@ def create_recipe():
     print("\n" + "="*50)
     print("RECIPE SUMMARY")
     print("="*50)
-    print(f"Name: {name}")
-    print(f"Cooking Time: {cooking_time} minutes")
-    print(f"Ingredients: {', '.join(ingredients)}")
-    print(f"Difficulty: {difficulty}")
+    # Create temporary recipe to display using __str__
+    temp_recipe = Recipe()
+    temp_recipe.name = name
+    temp_recipe.cooking_time = cooking_time
+    temp_recipe.ingredients = ", ".join(ingredients)
+    temp_recipe.difficulty = difficulty
+    print(temp_recipe.__str__())
     print("="*50)
     
     while True:
@@ -142,10 +145,13 @@ def create_recipe():
             print("\n" + "="*50)
             print("UPDATED RECIPE SUMMARY")
             print("="*50)
-            print(f"Name: {name}")
-            print(f"Cooking Time: {cooking_time} minutes")
-            print(f"Ingredients: {', '.join(ingredients)}")
-            print(f"Difficulty: {difficulty}")
+            # Create temporary recipe to display using __str__
+            temp_recipe = Recipe()
+            temp_recipe.name = name
+            temp_recipe.cooking_time = cooking_time
+            temp_recipe.ingredients = ", ".join(ingredients)
+            temp_recipe.difficulty = difficulty
+            print(temp_recipe.__str__())
             print("="*50)
         else:
             print("Please enter 'y' to confirm, 'n' to cancel, or 'edit' to modify.")
@@ -299,12 +305,13 @@ def edit_recipe():
     
     # Main editing loop - keep user in editing menu
     while True:
-        # Display the recipe, including only name, ingredients and cooking_time
-        # Display a number next to each attribute so that the user gets to pick one
+        # Display the recipe using __str__ method for consistency
         print(f"\nRecipe to edit:")
-        print("1. Name: " + recipe_to_edit.name)
-        print("2. Ingredients: " + recipe_to_edit.ingredients)
-        print("3. Cooking Time: " + str(recipe_to_edit.cooking_time) + " minutes")
+        print(recipe_to_edit.__str__())
+        print("\nWhat would you like to edit?")
+        print("1. Name")
+        print("2. Ingredients")
+        print("3. Cooking Time")
         print("0. Done editing (return to main menu)")
         
         # Ask the user which attribute they'd like to edit by entering the corresponding number
@@ -512,10 +519,7 @@ def delete_recipe():
 
     # Show recipe details and ask for confirmation
     print(f"\nRecipe to delete:")
-    print(f"Name: {recipe_to_delete.name}")
-    print(f"Cooking Time: {recipe_to_delete.cooking_time} minutes")
-    print(f"Ingredients: {recipe_to_delete.ingredients}")
-    print(f"Difficulty: {recipe_to_delete.difficulty}")
+    print(recipe_to_delete.__str__())
     
     confirm = input(f"\nAre you sure you want to delete '{recipe_to_delete.name}'? (y/n): ").strip().lower()
     

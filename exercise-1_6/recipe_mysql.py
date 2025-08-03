@@ -34,6 +34,37 @@ def create_database():
     conn.close()
     print("Database 'task_database' created successfully!")
 
+def create_tables(conn, cursor):
+    # Create the recipes table if it doesn't exist
+    create_table_query = """
+        CREATE TABLE IF NOT EXISTS recipes (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(255) NOT NULL,
+            cooking_time INT NOT NULL,
+            ingredients TEXT NOT NULL,
+            difficulty VARCHAR(50) NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """
+    cursor.execute(create_table_query)
+    print("Table 'recipes' is ready!")
+
+# Alternative parameterized version (for reference):
+# def create_tables(conn, cursor, table_name="recipes"):
+#     # Create the specified table if it doesn't exist
+#     create_table_query = f"""
+#         CREATE TABLE IF NOT EXISTS {table_name} (
+#             id INT AUTO_INCREMENT PRIMARY KEY,
+#             name VARCHAR(255) NOT NULL,
+#             cooking_time INT NOT NULL,
+#             ingredients TEXT NOT NULL,
+#             difficulty VARCHAR(50) NOT NULL,
+#             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+#         )
+#     """
+#     cursor.execute(create_table_query)
+#     print(f"Table '{table_name}' is ready!")
+
 def calc_difficulty(cooking_time, ingredients):
     num_ingredients = len(ingredients)
     if cooking_time < 10 and num_ingredients < 4:
@@ -120,19 +151,6 @@ def create_recipe(conn, cursor):
     
     # Convert ingredients list to string for MySQL storage
     ingredients_str = ", ".join(ingredients)
-    
-    # Create the recipes table if it doesn't exist
-    create_table_query = """
-        CREATE TABLE IF NOT EXISTS recipes (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            name VARCHAR(255) NOT NULL,
-            cooking_time INT NOT NULL,
-            ingredients TEXT NOT NULL,
-            difficulty VARCHAR(50) NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """
-    cursor.execute(create_table_query)
     
     # Insert the recipe into the database
     sql = """INSERT INTO recipes (name, cooking_time, ingredients, difficulty) VALUES (%s, %s, %s, %s)"""
@@ -496,4 +514,5 @@ if __name__ == "__main__":
     create_database()  # Create the database first
     conn = get_database_connection()
     cursor = conn.cursor()
+    create_tables(conn, cursor)  # Create tables after database is created
     main_menu(conn, cursor)

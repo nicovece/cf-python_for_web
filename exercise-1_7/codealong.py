@@ -72,14 +72,11 @@ print(f"Found {len(sugar_recipes_like)} recipes with like")
 for recipe in sugar_recipes_like:
     print(f"Recipe: {recipe.name}")
 
-# Dynamic query building with multiple conditions
-print("\n--- Dynamic Query Example ---")
 condition_list = [
     Recipe.ingredients.like("%Milk%"),
     Recipe.ingredients.like("%Baking Powder%")
 ]
 
-# Use the * before condition_list to unpack items out of the list
 recipes_with_both = session.execute(select(Recipe).where(*condition_list)).scalars().all()
 print(f"Found {len(recipes_with_both)} recipes with both Milk AND Baking Powder:")
 for recipe in recipes_with_both:
