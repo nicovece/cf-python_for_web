@@ -530,7 +530,7 @@ def main_menu():
         print("3. Search for recipes by ingredients")
         print("4. Edit a recipe")
         print("5. Delete a recipe")
-        print("0. Exit (or type 'quit')")
+        print("0. Exit (or type 'quit' or 'q')")
         
         choice = input("\nEnter your choice: ").strip().lower()
         
