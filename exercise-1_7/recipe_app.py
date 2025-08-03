@@ -64,7 +64,7 @@ Base.metadata.create_all(engine)
 
 def create_recipe():
     print("\n=== Create Recipe ===")
-    name = input("Enter recipe name: ")
+    name = input("\nEnter recipe name: ")
     while True:
         try:
             cooking_time = int(input("Enter cooking time (in minutes): "))
