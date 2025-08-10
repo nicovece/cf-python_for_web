@@ -15,7 +15,7 @@ db_password = os.getenv('DB_PASSWORD')
 db_host = os.getenv('DB_HOST')
 db_name = os.getenv('DB_NAME')
 
-engine = create_engine(f"mysql://{db_user}:{db_password}@{db_host}/{db_name}")
+engine = create_engine(f"mysql+mysqlconnector://{db_user}:{db_password}@{db_host}/{db_name}")
 
 Session = sessionmaker(bind=engine)
 session = Session()
@@ -261,13 +261,32 @@ def search_recipe():
     
     input("\nPress Enter to return to main menu...")
 
-def edit_recipe():
+def confirm_change(old_value, new_value, change_type):
+    """Generic confirmation dialog for recipe changes."""
+    print(f"\nUpdate: '{old_value}' → '{new_value}'")
+    confirm = input("Confirm this change? (y/n): ").strip().lower()
+    return confirm in ['y', 'yes']
+
+def get_valid_choice(prompt, min_val, max_val):
+    """Get valid integer input within a range."""
+    while True:
+        try:
+            choice = int(input(prompt))
+            if min_val <= choice <= max_val:
+                return choice
+            else:
+                print(f"Please enter a number between {min_val} and {max_val}.")
+        except ValueError:
+            print("Please enter a valid number.")
+
+def select_recipe_to_edit():
+    """Handle recipe selection and validation."""
     print("\n=== Edit Recipe ===")
     # Check if any recipes exist on your database, and continue only if there are any
     recipe_count = session.query(Recipe).count()
     if recipe_count == 0:
         print("No recipes found in the database.")
-        return
+        return None
     
     # Retrieve the id and name for each recipe from the database, and store them into results
     results = session.query(Recipe.id, Recipe.name).all()
@@ -284,14 +303,159 @@ def edit_recipe():
         recipe_ids = [result[0] for result in results]
         if choice not in recipe_ids:
             print(f"Recipe ID {choice} does not exist.")
-            return
+            return None
     except ValueError:
         print("Please enter a valid number.")
-        return
+        return None
     
     # Retrieve the entire recipe that corresponds to this id from the database
-    recipe_to_edit = session.query(Recipe).filter(Recipe.id == choice).first()
+    return session.query(Recipe).filter(Recipe.id == choice).first()
+
+def replace_all_ingredients(recipe):
+    """Replace all ingredients in a recipe."""
+    new_ingredients = input("Enter new ingredients (comma separated): ").strip()
+    if new_ingredients:
+        if confirm_change(recipe.ingredients, new_ingredients, "ingredients"):
+            recipe.ingredients = new_ingredients
+            recipe.calc_difficulty()
+            session.commit()
+            print("Recipe ingredients updated successfully!")
+        else:
+            print("Update cancelled.")
+    else:
+        print("Ingredients cannot be empty.")
+
+def add_ingredients(recipe):
+    """Add new ingredients to a recipe."""
+    add_ingredients_input = input("Enter ingredients to add (comma separated): ").strip()
+    if add_ingredients_input:
+        ingredients_to_add = [ingredient.strip() for ingredient in add_ingredients_input.split(",")]
+        # Combine current and new ingredients, avoiding duplicates
+        current_ingredients = recipe.return_ingredients_as_list()
+        combined_ingredients = current_ingredients.copy()
+        for ingredient in ingredients_to_add:
+            if ingredient.lower() not in [ing.lower() for ing in combined_ingredients]:
+                combined_ingredients.append(ingredient)
+        
+        new_ingredients_str = ", ".join(combined_ingredients)
+        
+        if confirm_change(recipe.ingredients, new_ingredients_str, "ingredients"):
+            recipe.ingredients = new_ingredients_str
+            recipe.calc_difficulty()
+            session.commit()
+            print("Recipe ingredients updated successfully!")
+        else:
+            print("Update cancelled.")
+    else:
+        print("No ingredients to add.")
+
+def remove_ingredients(recipe):
+    """Remove specific ingredients from a recipe."""
+    current_ingredients = recipe.return_ingredients_as_list()
+    if len(current_ingredients) <= 1:
+        print("Cannot remove ingredients - recipe must have at least one ingredient.")
+        return
     
+    print(f"\nCurrent ingredients:")
+    for i, ingredient in enumerate(current_ingredients, 1):
+        print(f"{i}. {ingredient}")
+    
+    # Loop to keep asking for valid input
+    while True:
+        remove_input = input("Enter the numbers of ingredients to remove (comma separated): ").strip()
+        if not remove_input:
+            print("No ingredients to remove.")
+            break
+        
+        try:
+            remove_indices = [int(x.strip()) - 1 for x in remove_input.split(",")]
+            # Validate indices
+            valid_indices = all(0 <= idx < len(current_ingredients) for idx in remove_indices)
+            if not valid_indices:
+                print("Invalid ingredient numbers. Please try again.")
+                continue
+            
+            # Remove ingredients
+            remaining_ingredients = [ing for i, ing in enumerate(current_ingredients) if i not in remove_indices]
+            
+            if not remaining_ingredients:
+                print("Cannot remove all ingredients - recipe must have at least one ingredient.")
+                break
+            
+            new_ingredients_str = ", ".join(remaining_ingredients)
+            
+            if confirm_change(recipe.ingredients, new_ingredients_str, "ingredients"):
+                recipe.ingredients = new_ingredients_str
+                recipe.calc_difficulty()
+                session.commit()
+                print("Recipe ingredients updated successfully!")
+            else:
+                print("Update cancelled.")
+            break
+            
+        except ValueError:
+            print("Please enter valid numbers separated by commas.")
+            continue
+
+def edit_recipe_ingredients(recipe):
+    """Handle ingredients editing with enhanced UX."""
+    current_ingredients = recipe.return_ingredients_as_list()
+    print(f"\nCurrent ingredients: {', '.join(current_ingredients)}")
+    print("\nWhat would you like to do with ingredients?")
+    print("1. Replace all ingredients")
+    print("2. Add new ingredients")
+    print("3. Remove specific ingredients")
+    print("0. Cancel")
+    
+    ingredient_choice = input("Enter your choice (0-3): ").strip()
+    
+    if ingredient_choice == "1":
+        replace_all_ingredients(recipe)
+    elif ingredient_choice == "2":
+        add_ingredients(recipe)
+    elif ingredient_choice == "3":
+        remove_ingredients(recipe)
+    elif ingredient_choice == "0":
+        print("Returning to attribute selection...")
+    else:
+        print("Invalid choice. Please try again.")
+
+def edit_recipe_name(recipe):
+    """Handle recipe name editing."""
+    new_name = input("Enter new recipe name: ").strip()
+    if new_name:
+        if confirm_change(recipe.name, new_name, "name"):
+            recipe.name = new_name
+            recipe.calc_difficulty()
+            session.commit()
+            print("Recipe name updated successfully!")
+        else:
+            print("Update cancelled.")
+    else:
+        print("Name cannot be empty.")
+
+def edit_recipe_cooking_time(recipe):
+    """Handle cooking time editing."""
+    try:
+        new_cooking_time = int(input("Enter new cooking time (in minutes): "))
+        if new_cooking_time > 0:
+            if confirm_change(f"{recipe.cooking_time} minutes", f"{new_cooking_time} minutes", "cooking time"):
+                recipe.cooking_time = new_cooking_time
+                recipe.calc_difficulty()
+                session.commit()
+                print("Recipe cooking time updated successfully!")
+            else:
+                print("Update cancelled.")
+        else:
+            print("Cooking time must be greater than 0.")
+    except ValueError:
+        print("Please enter a valid integer for cooking time.")
+
+def edit_recipe():
+    recipe_to_edit = select_recipe_to_edit()
+    if recipe_to_edit is None:
+        return
+
     # Main editing loop - keep user in editing menu
     while True:
         # Display the recipe using __str__ method for consistency
@@ -316,160 +480,13 @@ def edit_recipe():
         
         # Based on the input, use if-else statements to edit the respective attribute
         if attribute_choice == 1:
-            # Edit name
-            new_name = input("Enter new recipe name: ").strip()
-            if new_name:
-                # Show confirmation with old vs new
-                print(f"\nUpdate: '{recipe_to_edit.name}' → '{new_name}'")
-                confirm = input("Confirm this change? (y/n): ").strip().lower()
-                if confirm in ['y', 'yes']:
-                    recipe_to_edit.name = new_name
-                    # Recalculate the difficulty using the object's calc_difficulty() method
-                    recipe_to_edit.calc_difficulty()
-                    # Commit these changes to the database
-                    session.commit()
-                    print("Recipe name updated successfully!")
-                else:
-                    print("Update cancelled.")
-            else:
-                print("Name cannot be empty.")
+            edit_recipe_name(recipe_to_edit)
                 
         elif attribute_choice == 2:
-            # Edit ingredients with enhanced UX
-            current_ingredients = recipe_to_edit.return_ingredients_as_list()
-            print(f"\nCurrent ingredients: {', '.join(current_ingredients)}")
-            print("\nWhat would you like to do with ingredients?")
-            print("1. Replace all ingredients")
-            print("2. Add new ingredients")
-            print("3. Remove specific ingredients")
-            print("0. Cancel")
-            
-            ingredient_choice = input("Enter your choice (0-3): ").strip()
-            
-            if ingredient_choice == "1":
-                # Replace all ingredients (follows exercise directions)
-                new_ingredients = input("Enter new ingredients (comma separated): ").strip()
-                if new_ingredients:
-                    # Show confirmation with old vs new
-                    print(f"\nUpdate: '{recipe_to_edit.ingredients}' → '{new_ingredients}'")
-                    confirm = input("Confirm this change? (y/n): ").strip().lower()
-                    if confirm in ['y', 'yes']:
-                        recipe_to_edit.ingredients = new_ingredients
-                        # Recalculate the difficulty using the object's calc_difficulty() method
-                        recipe_to_edit.calc_difficulty()
-                        # Commit these changes to the database
-                        session.commit()
-                        print("Recipe ingredients updated successfully!")
-                    else:
-                        print("Update cancelled.")
-                else:
-                    print("Ingredients cannot be empty.")
-                    
-            elif ingredient_choice == "2":
-                # Add new ingredients (UX improvement)
-                add_ingredients_input = input("Enter ingredients to add (comma separated): ").strip()
-                if add_ingredients_input:
-                    ingredients_to_add = [ingredient.strip() for ingredient in add_ingredients_input.split(",")]
-                    # Combine current and new ingredients, avoiding duplicates
-                    combined_ingredients = current_ingredients.copy()
-                    for ingredient in ingredients_to_add:
-                        if ingredient.lower() not in [ing.lower() for ing in combined_ingredients]:
-                            combined_ingredients.append(ingredient)
-                    
-                    new_ingredients_str = ", ".join(combined_ingredients)
-                    
-                    # Show confirmation with old vs new
-                    print(f"\nUpdate: '{recipe_to_edit.ingredients}' → '{new_ingredients_str}'")
-                    confirm = input("Confirm this change? (y/n): ").strip().lower()
-                    if confirm in ['y', 'yes']:
-                        recipe_to_edit.ingredients = new_ingredients_str
-                        # Recalculate the difficulty using the object's calc_difficulty() method
-                        recipe_to_edit.calc_difficulty()
-                        # Commit these changes to the database
-                        session.commit()
-                        print("Recipe ingredients updated successfully!")
-                    else:
-                        print("Update cancelled.")
-                else:
-                    print("No ingredients to add.")
-                    
-            elif ingredient_choice == "3":
-                # Remove specific ingredients (UX improvement)
-                if len(current_ingredients) <= 1:
-                    print("Cannot remove ingredients - recipe must have at least one ingredient.")
-                else:
-                    print(f"\nCurrent ingredients:")
-                    for i, ingredient in enumerate(current_ingredients, 1):
-                        print(f"{i}. {ingredient}")
-                    
-                    # Loop to keep asking for valid input
-                    while True:
-                        remove_input = input("Enter the numbers of ingredients to remove (comma separated): ").strip()
-                        if not remove_input:
-                            print("No ingredients to remove.")
-                            break
-                        
-                        try:
-                            remove_indices = [int(x.strip()) - 1 for x in remove_input.split(",")]
-                            # Validate indices
-                            valid_indices = all(0 <= idx < len(current_ingredients) for idx in remove_indices)
-                            if not valid_indices:
-                                print("Invalid ingredient numbers. Please try again.")
-                                continue
-                            
-                            # Remove ingredients
-                            remaining_ingredients = [ing for i, ing in enumerate(current_ingredients) if i not in remove_indices]
-                            
-                            if not remaining_ingredients:
-                                print("Cannot remove all ingredients - recipe must have at least one ingredient.")
-                                break
-                            
-                            new_ingredients_str = ", ".join(remaining_ingredients)
-                            
-                            # Show confirmation with old vs new
-                            print(f"\nUpdate: '{recipe_to_edit.ingredients}' → '{new_ingredients_str}'")
-                            confirm = input("Confirm this change? (y/n): ").strip().lower()
-                            if confirm in ['y', 'yes']:
-                                recipe_to_edit.ingredients = new_ingredients_str
-                                # Recalculate the difficulty using the object's calc_difficulty() method
-                                recipe_to_edit.calc_difficulty()
-                                # Commit these changes to the database
-                                session.commit()
-                                print("Recipe ingredients updated successfully!")
-                            else:
-                                print("Update cancelled.")
-                            break
-                            
-                        except ValueError:
-                            print("Please enter valid numbers separated by commas.")
-                            continue
-                            
-            elif ingredient_choice == "0":
-                print("Returning to attribute selection...")
-            else:
-                print("Invalid choice. Please try again.")
+            edit_recipe_ingredients(recipe_to_edit)
                 
         elif attribute_choice == 3:
-            # Edit cooking time
-            try:
-                new_cooking_time = int(input("Enter new cooking time (in minutes): "))
-                if new_cooking_time > 0:
-                    # Show confirmation with old vs new
-                    print(f"\nUpdate: {recipe_to_edit.cooking_time} minutes → {new_cooking_time} minutes")
-                    confirm = input("Confirm this change? (y/n): ").strip().lower()
-                    if confirm in ['y', 'yes']:
-                        recipe_to_edit.cooking_time = new_cooking_time
-                        # Recalculate the difficulty using the object's calc_difficulty() method
-                        recipe_to_edit.calc_difficulty()
-                        # Commit these changes to the database
-                        session.commit()
-                        print("Recipe cooking time updated successfully!")
-                    else:
-                        print("Update cancelled.")
-                else:
-                    print("Cooking time must be greater than 0.")
-            except ValueError:
-                print("Please enter a valid integer for cooking time.")
+            edit_recipe_cooking_time(recipe_to_edit)
                 
         elif attribute_choice == 0:
             # Done editing - return to main menu
