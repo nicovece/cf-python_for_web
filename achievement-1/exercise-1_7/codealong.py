@@ -2,10 +2,22 @@ from sqlalchemy import create_engine, select
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import sessionmaker 
+import os
+from dotenv import load_dotenv 
 
 Base = declarative_base()
 
-engine = create_engine("mysql://cf-python:paroladordineperpythonmysql@localhost/my_database")
+# Load environment variables from .env file
+script_dir = os.path.dirname(os.path.abspath(__file__))
+load_dotenv(os.path.join(script_dir, '.env'))
+
+# Create database connection string from environment variables
+db_user = os.getenv('DB_USER')
+db_password = os.getenv('DB_PASSWORD')
+db_host = os.getenv('DB_HOST')
+db_name = os.getenv('DB_NAME')
+
+engine = create_engine(f"mysql+mysqlconnector://{db_user}:{db_password}@{db_host}/{db_name}")
 
 Session = sessionmaker(bind=engine)
 session = Session()
