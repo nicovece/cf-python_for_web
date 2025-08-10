@@ -238,10 +238,10 @@ def search_recipe():
     # Initialize an empty list called conditions
     conditions = []
     
-    # Run a loop through search_ingredients to create like conditions
+    # Run a loop through search_ingredients to create ilike conditions (case-insensitive)
     for ingredient in search_ingredients:
         like_term = f"%{ingredient}%"
-        conditions.append(Recipe.ingredients.like(like_term))
+        conditions.append(Recipe.ingredients.ilike(like_term))
     
     # Retrieve all recipes using filter() query with the conditions
     matching_recipes = session.query(Recipe).filter(*conditions).all()
