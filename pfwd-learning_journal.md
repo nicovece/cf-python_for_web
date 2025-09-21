@@ -6,7 +6,7 @@ _Reflection questions (to complete before your first mentor call)_
 
 ---
 
-**What experiences have you had with coding and/or programming so far? What otherå experiences (programming-related or not) have you had that may help you as you progress through this course?**
+**What experiences have you had with coding and/or programming so far? What other experiences (programming-related or not) have you had that may help you as you progress through this course?**
 
 I have been working as a freelance designer and front-end developer since 2005, mainly on small projects. I am self-taught and have strong skills in HTML and CSS, along with some experience using JavaScript and PHP for basic tasks.
 
@@ -186,7 +186,7 @@ Logical operators are commonly used in `if` statements to make decisions based o
 
 Functions in Python, as in most other programming languages, are blocks of reusable code that perform a specific task. You define a function once and can use it as many times as needed.
 
-Eexample of Python function defintion:
+Example of Python function definition:
 
 ```python
 def greet(name):
@@ -235,7 +235,7 @@ Situations suitable for Pickles use:
 **In Python, what function do you use to find out which directory you're currently in? What if you wanted to change your current working directory?**
 
 Using the os module command `os.getcwd()`, you can find out which directory you are currently working in. To change the current working directory, you can use `os.chdir(path)`, where `path` is the new directory you want to move to.
-(Os module must be imported first with `import osg.)
+(Os module must be imported first with `import os`.)
 
 Example
 
@@ -311,7 +311,7 @@ The benefits of OOP are:
 
 A class is like a blueprint or a recipe. It defines what something is and what it can do. An object is a specific thing made from that class, an instance. It follows the blueprint but has its own unique data.
 
-An example is the samrtphone.
+An example is the smartphone.
 
 **Class** : Smartphone
 This is the **blueprint** for any phone. It defines what every smartphone _has_ (like brand, model, storage) and what it _can do_ (make calls, take photos, send messages).
@@ -426,7 +426,7 @@ As I'm still a beginner, I don't have enough experience to fully understand the 
 
 **Mobile Development**: Python isn't commonly used for creating mobile apps. Most mobile apps are built with languages like Swift (iOS), Kotlin/Java (Android), or JavaScript/TypeScript (Universal via React Native).
 
-**Web Frontend**: Frontend has been my main area of expertise till now**,** but while Python is great for backend web development, it is not usable for frontend as JavaScript is the only language a web browser can natively work with.
+**Web Frontend**: Frontend has been my main area of expertise till now, but while Python is great for backend web development, it is not usable for frontend as JavaScript is the only language a web browser can natively work with.
 
 **Memory Usage**: Python tends to use more memory than some other languages, which could matter for very large applications.
 
